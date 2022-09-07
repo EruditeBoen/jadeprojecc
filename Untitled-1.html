@@ -1,0 +1,525 @@
+<html>
+    <head>
+        <title>Ro's Avavtar</title>
+        <meta name="viewport" content=""width=device-weidth, initial-scale="1.0">
+
+        <style>
+            canvas{
+                border:1px solid black;
+
+            }
+            body{
+                margin:0;
+                
+            }
+            #sliders{
+                position:absolute;
+                top:0;
+                left:320;
+            }
+            #camCanvas{
+                max-width: 173px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+        <div id="sliders">
+            x: <input type="range" min="-0.5" max="0.5" step="0.1" onchange="updatelookAt(this, 'x', 'A')"/>
+            <br>
+            y: <input type="range" min="-0.3" max="0.3" step="0.1" onchange="updatelookAt(this, 'y', 'B')"/>
+            <br>
+            <canvas id="camCanvas"></canvas>
+        </br>
+        </div>
+        <script src="body.js"></script>
+        <script src="physics.js"></script>
+        <script src="camera.js"></script>
+        <script src="utils.js"></script>
+        <script src="avatar.js"></script>
+        <script src="eye.js"></script>
+        <script src="hat.js"></script>
+        <script src="hair.js"></script>
+        <script>
+
+            const DEBUG=false;
+            const canvas=document.getElementById("myCanvas");
+            canvas.width=300;
+            canvas.height=300;
+
+            const ctx=canvas.getContext("2d");
+            const camCtx=camCanvas.getContext("2d");
+
+            ctx.lineWidth=0.01;
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.scale(canvas.width*0.5, canvas.height*0.5);
+            const img=new Image();
+            img.src="me.jpg";
+
+
+            // Point A
+            const lookAt={x:0, y:-0.19, xRange:[0, 0.2], yRange:[-0.19, 0.15], xOffset:0,yOffset:0};
+            const avatar= new Avatar(lookAt);
+
+            
+            
+            //const {A}=livePoints;
+            //B:{x:0, y:-0.577, xRange:[0, 0.015], yRange:[-0.577, -0.6], xOffset:0,yOffset:0},
+            //C:{x:0, y:0.17, xRange:[0, 0.15], yRange:[0.18, 0.13], yNegRange:[0.16, 0.07], xOffset:0,yOffset:0}
+
+
+            img.onload=function(){            
+                animate();
+            }
+
+            
+
+            canvas.addEventListener("click", getCoords);
+
+            function animate(){
+
+                ctx.clearRect(-1, -1, 2, 2);
+                // ctx.globalAlpha=0.3;
+                // ctx.drawImage(img, -.944, -1, 2, 2);
+                // ctx.globalAlpha=1;
+
+                if(video){
+                    camCtx.drawImage(video, 0, 0);
+                    const imgData=camCtx.getImageData(0, 0, camCanvas.width, camCanvas.height);
+                    const locs=getMarkedLocations(imgData);
+                    if(locs.length>0){
+                        const avg=average(locs);
+                        const x=(avg[0]-imgData.width/2)/imgData.width;
+                        const y=(avg[1]-imgData.height/2)/imgData.height;
+
+                        updatelookAt({value:x}, 'x');
+                        updatelookAt({value:y}, 'y');
+
+                        const offset={
+                            x:x,
+                            y:y
+                        }
+
+                        // const offset={
+                        //     x:x-lookAt.x,
+                        //     y:y-lookAt.y
+                        // }
+                        // console.log(offset.x.toFixed(2)+","+offset.y.toFixed(2));
+
+                    }
+                }
+                hairTop(lookAt);
+
+                color(lookAt);
+
+                avatar.draw(ctx);
+
+                requestAnimationFrame(animate);
+            }
+
+            function getCoords(evt){
+                const x=(evt.x-canvas.width/2)/(canvas.width/2); 
+                const y=(evt.y-canvas.height/2)/(canvas.height/2);
+                console.log(x.toFixed(2)+","+y.toFixed(2));
+            }
+
+
+            function hairTop(){
+                ctx.beginPath();
+                ctx.moveTo(-0.44,1.00);
+                ctx.lineTo(-0.37,-0.45);
+                ctx.quadraticCurveTo(0, -1, 0.43,-0.45);
+                ctx.lineTo(0.43,1.00);
+                ctx.lineTo(-0.44,1.00);
+                ctx.stroke();
+                ctx.fillStyle="rgb(13, 102, 255)";
+                ctx.fill();
+
+
+            }
+
+            
+            function color(){
+                ctx.beginPath();
+                ctx.moveTo(-0.36,0.11);
+                ctx.lineTo(0.41,0.09);
+                ctx.lineTo(0.63,0.54);
+                ctx.lineTo(0.62,1.01);
+
+                ctx.lineTo(-0.59,1.01);
+                ctx.lineTo(-0.43,0.47);
+                ctx.lineTo(-0.36,0.11);
+
+                ctx.fillStyle="rgb(225, 167, 108)";
+                ctx.fill();
+                
+            }
+
+            // function drawHair(ref){
+                
+            //     ctx.save();
+
+                
+
+                
+            //     ctx.beginPath();
+            //     ctx.moveTo(-0.40,-0.2);
+            //     ctx.quadraticCurveTo(-0.36, 0.4, -0.59,0.57);
+            //     ctx.quadraticCurveTo(-0.7, .97, -0.6,1);
+            //     ctx.lineTo(-0.4,1);
+            //     ctx.quadraticCurveTo(-0.44, .91, -0.39,0.85);
+            //     ctx.quadraticCurveTo(-0.5, .6, -0.35,0.53);
+            //     ctx.lineTo(-0.07,0.44);
+            //     ctx.quadraticCurveTo(-0.02, .33, -0.05,0.16);
+            //     ctx.quadraticCurveTo(-0.24, .1, -0.33,-0.15);
+            //     ctx.quadraticCurveTo(-0.3, -.07, -0.37,-0.09);
+            //     ctx.lineTo(-0.34,-0.2);
+            //     ctx.lineTo(-0.37,-0.2);
+            //     ctx.quadraticCurveTo(-0.33, -.07, -0.4,0.05);
+
+                
+
+            //     // const scaleX=Math.max(0-ref.xOffset, ref.xOffset);
+            //     // scaleY=ref.yOffset;
+            //     // const verticalSquish=1-Math.abs(scaleY*0.9)
+            //     // const horizontalSquish=1-scaleX*0.3
+            //     // ctx.scale(horizontalSquish, verticalSquish);
+
+            //     ctx.moveTo(0.34,-0.17);
+            //     ctx.quadraticCurveTo(0.46, -.08, 0.46,0.08);
+            //     ctx.quadraticCurveTo(0.45, 0.3, 0.63,0.40);
+            //     ctx.quadraticCurveTo(0.75, 0.6, 0.69,0.81);
+            //     ctx.quadraticCurveTo(0.65, 1, 0.77,1);
+            //     ctx.lineTo(0.40,1.00);
+            //     ctx.quadraticCurveTo(0.7, 0.4, 0.45,0.38);
+            //     ctx.lineTo(0.12,0.43);
+            //     ctx.quadraticCurveTo(0.05, 0.4, 0.09,0.16);
+            //     ctx.quadraticCurveTo(0.3, 0.05, 0.34,-0.17);
+
+
+
+
+            //     ctx.fillStyle="rgb(13, 102, 255)";
+            //     ctx.fill();
+
+       
+            //     ctx.restore();
+            //     ctx.stroke();
+
+
+
+            // }
+
+            // function drawClothes(){
+            //     ctx.beginPath();
+            //     ctx.moveTo(-0.12,0.46);
+            //     ctx.lineTo(-0.24,0.78);
+            //     ctx.quadraticCurveTo(-0.1, 0.8, -0.11,0.95);
+            //     ctx.quadraticCurveTo(-0.1, 0.8, 0.10,0.79);
+            //     ctx.lineTo(0.25,0.41);
+            //     ctx.lineTo(0.29,0.4);
+            //     ctx.lineTo(0.14,0.80);
+            //     ctx.lineTo(0.20,0.89);
+            //     ctx.lineTo(0.16,1.00);
+            //     ctx.lineTo(-0.39,1.00);
+            //     ctx.quadraticCurveTo(-0.5, 0.85, -0.275,0.77);
+            //     ctx.lineTo(-0.16,0.47);
+            //     ctx.lineTo(-0.12,0.46);
+            //     ctx.fillStyle="black";
+            //     ctx.stroke();
+            //     ctx.fill();
+
+            // }
+            
+
+
+            // function drawHead(){
+                
+            //     drawHair(A);
+                
+                
+            //     ctx.strokeStyle="black";
+            //     ctx.beginPath();
+            //     ctx.moveTo(B.x, B.y);
+            //     ctx.quadraticCurveTo(A.x, A.y, C.x, C.y);
+            //     ctx.moveTo(-0.34, -0.190);
+            //     ctx.quadraticCurveTo(A.x, A.y, 0.34, -0.190);
+            //     ctx.stroke();
+
+            //     ctx.beginPath();
+            //     ctx.moveTo(B.x, B.y);
+            //     ctx.quadraticCurveTo(-0.35, -0.55, -0.34, -0.190);
+            //     ctx.quadraticCurveTo(-0.28, 0.15, C.x, C.y);
+            //     ctx.quadraticCurveTo(0.28, 0.15, 0.34, -0.190);
+            //     ctx.quadraticCurveTo(0.35, -0.55, B.x, B.y);
+
+
+                
+            //     ctx.stroke();
+            //     ctx.fillStyle="rgb(225, 167, 108)";
+            //     ctx.fill()
+            //     ctx.stroke();
+                
+
+            //     ctx.strokeStyle="black";
+
+                
+
+                
+
+            //     drawHats(A);
+
+            //     drawEyes(A);
+
+            //     drawLips(A);
+
+            //     drawClothes(A);
+
+            
+
+
+            //     drawEyes(A);
+
+
+
+            // }
+
+
+            // function drawHats(ref){
+            //     ctx.save();
+                
+            //     ctx.translate(ref.x, ref.y);
+
+            //     drawHat(Math.max(0, -ref.xOffset), -ref.yOffset);
+
+            //     ctx.scale(-1, 1);
+
+            //     drawHat(Math.max(0, ref.xOffset), -ref.yOffset);
+
+            //     ctx.restore();
+            // }
+
+            // function drawHat(scaleX, scaleY){
+            //     ctx.save();
+
+            //     const verticalSquish=1-Math.abs(scaleY*0.6)
+            //     const horizontalSquish=1-scaleX*0.5
+            //     ctx.scale(horizontalSquish,verticalSquish);
+            //     ctx.beginPath();              
+            //     ctx.moveTo(0.07,0.1);
+            //     ctx.quadraticCurveTo(0.16, -0.1, 0.36,-0.01);
+            //     ctx.quadraticCurveTo(0.3, 0.1, 0.21,0.09);
+            //     ctx.lineTo(0.07,0.1);
+            
+
+                
+
+                
+            //     ctx.beginPath();
+            //     ctx.moveTo(0.01,-0.57+.2);
+            //     ctx.quadraticCurveTo(-0.4, -0.5+.2, -0.33,-0.1+.2);  
+            //     // ctx.quadraticCurveTo(-0.25, 0.1+.2, -0.15,0.2+.2);   
+
+            //     ctx.quadraticCurveTo(-0.5, 0.03+.2, -0.47,-0.02+.2);               
+            //     ctx.lineTo(-0.51,-0.04);
+            //     ctx.quadraticCurveTo(-0.4, -0.05+.2, -0.53,-0.1+.2);
+            //     ctx.quadraticCurveTo(-0.55, -0.15+.2, -0.53,-0.17+.2);
+            //     ctx.lineTo(-0.59,-0.21+.2);
+            //     ctx.lineTo(-0.55,-0.23+.2);
+            //     ctx.lineTo(-0.55,-0.29+.2);
+            //     ctx.lineTo(-0.58,-0.29+.2);
+            //     ctx.lineTo(-0.55,-0.34+.2);
+            //     ctx.lineTo(-0.59,-0.35+.2);
+            //     ctx.lineTo(-0.55,-0.36+.2);
+            //     ctx.lineTo(-0.55,-0.41+.2);
+            //     ctx.lineTo(-0.59,-0.44+.2);
+            //     ctx.lineTo(-0.55,-0.43+.2);
+            //     ctx.quadraticCurveTo(-0.5, -0.45+.2, -0.55,-0.51+.2);
+            //     ctx.lineTo(-0.49,-0.56+.2);
+            //     ctx.lineTo(-0.53,-0.59+.2);
+            //     ctx.lineTo(-0.47,-0.63+.2);
+            //     ctx.lineTo(-0.45,-0.70+.2);
+            //     ctx.lineTo(-0.41,-0.71+.2);
+            //     ctx.lineTo(-0.31,-0.79+.2);
+            //     ctx.lineTo(-0.31,-0.79+.2);
+            //     ctx.lineTo(-0.31,-0.83+.2);
+            //     ctx.lineTo(-0.21,-0.82+.2);
+            //     ctx.lineTo(-0.09,-0.85+.2);
+            //     ctx.lineTo(-0.10,-0.89+.2);
+            //     ctx.lineTo(-0.05,-0.85+.2);
+            //     ctx.lineTo(0.00,-0.85+.2);
+                
+                
+                
+
+            //     ctx.stroke();
+            //     ctx.fillStyle='black';
+            //     ctx.fill();
+            //     ctx.restore();
+
+            // }
+            
+
+            // function drawLips(ref){
+            //     ctx.save();
+            //     ctx.translate(ref.x, ref.y);
+
+            //     const scaleX=Math.max(0-ref.xOffset, ref.xOffset);
+            //     scaleY=ref.yOffset;
+            //     const verticalSquish=1-Math.abs(scaleY*0.9)
+            //     const horizontalSquish=1-scaleX*0.6
+            //     ctx.scale(horizontalSquish, verticalSquish);
+
+            //     ctx.beginPath();
+            //     ctx.moveTo(-0.08,0.25);
+            //     ctx.quadraticCurveTo(0.0, 0.1, 0.09,0.25);
+            //     ctx.quadraticCurveTo(0.0, 0.38, -0.08,0.25);
+
+            //     ctx.stroke();
+            //     ctx.fillStyle="rgb(186, 12, 30)";
+            //     ctx.fill();
+
+            //     ctx.beginPath();
+            //     ctx.arc(0.0,0.25, 0.015, 0.09, Math.PI*2.1)
+            //     ctx.fillStyle="white";
+            //     ctx.fill();
+            //     ctx.restore();
+            //     ctx.stroke();
+
+
+    
+            // }
+
+            // function drawEyes(ref){
+            //     ctx.save();
+            //     ctx.translate(ref.x, ref.y);
+
+            //     drawEye(Math.max(0, ref.xOffset), ref.yOffset);
+
+            //     ctx.scale(-1, 1);
+
+            //     drawEye(Math.max(0, -ref.xOffset), ref.yOffset);
+
+            //     ctx.restore();
+            // }
+
+            // function drawEye(scaleX, scaleY){
+            //     ctx.save();
+
+            //     const verticalSquish=1-Math.abs(scaleY*0.6)
+            //     const horizontalSquish=1-scaleX*0.6
+            //     ctx.scale(horizontalSquish,verticalSquish);
+            //     ctx.beginPath();              
+            //     ctx.moveTo(0.07,0.1);
+            //     ctx.quadraticCurveTo(0.16, -0.1, 0.36,-0.01);
+            //     ctx.quadraticCurveTo(0.3, 0.1, 0.21,0.09);
+            //     ctx.lineTo(0.07,0.1);
+            
+            //     ctx.fillStyle="white";
+            //     ctx.fill();
+            //     ctx.stroke();
+
+
+            //     ctx.beginPath();
+            //     ctx.fillStyle="black";
+            //     ctx.moveTo(0.07,0.1);
+            //     ctx.quadraticCurveTo(0.1, -0.08, 0.36,-0.03);
+            //     ctx.quadraticCurveTo(0.4,-0.05,0.35,0.01);
+            //     ctx.quadraticCurveTo(0.15, -0.03,0.1,0.05);
+            //     ctx.fill()
+
+            //     ctx.beginPath();
+            //     ctx.moveTo(0.09,-0.16);
+            //     ctx.quadraticCurveTo(0.25,-0.2, 0.34,-0.10);
+            //     ctx.lineTo(0.26,-0.2);
+            //     ctx.quadraticCurveTo(0.21,-0.23, 0.08,-0.21);
+            //     ctx.quadraticCurveTo(0.05,-0.19, 0.09,-0.16);
+            //     ctx.fillStyle="black";
+            //     ctx.fill()
+            //     ctx.stroke();
+                
+            //     ctx.beginPath();
+            //     ctx.moveTo(0.21,-0.02);
+            //     ctx.quadraticCurveTo( 0.17, 0.3, 0.18,-0.02);
+
+            //     //ctx.arc(0.18,-0.02, 0.105, 0.09, Math.PI*-1.1);
+            //     ctx.fill();
+
+            //     ctx.restore();
+
+                
+            // }
+
+            // function drawBody(){
+                
+
+            //     ctx.beginPath();
+            //     ctx.moveTo(-0.06, 0.1);
+            //     ctx.quadraticCurveTo(-0.03, 0.3, -0.06, 0.44);
+            //     ctx.lineTo(-0.347, 0.53);
+            //     ctx.quadraticCurveTo(-0.5, 0.6, -0.393, 0.86);
+            //     ctx.moveTo(-0.287, 0.773);
+            //     ctx.quadraticCurveTo(-0.45, 0.85, -0.393, 1.007);
+            //     ctx.moveTo(0.093, 0.1);
+            //     ctx.quadraticCurveTo(0.05, 0.3, 0.107, 0.43);
+            //     ctx.lineTo(0.44, 0.38);
+            //     ctx.quadraticCurveTo(0.7, 0.4, 0.4, 1.007);
+            //     ctx.moveTo(0.32, 0.62);
+            //     ctx.lineTo(0.153, 1.007);
+            //     ctx.moveTo(0.28, 0.627);
+            //     ctx.lineTo(0.3, 0.66);
+
+            //     //arm
+                
+            //     ctx.moveTo(-0.06, 0.1);
+                
+            //     ctx.strokeStyle="black";
+            //     ctx.stroke();
+
+                
+            //     ctx.strokeStyle="black";
+                
+            // }
+
+            function drawPoint(loc, label, rad=0.05){
+                ctx.beginPath();
+                ctx.arc(loc.x, loc.y, rad, 0, Math.PI*2);
+                ctx.fillStyle="green";
+                ctx.fill();
+                ctx.fillStyle="white";
+                ctx.font=(rad*1.9)+"px Arial";
+                ctx.textAlign="center";
+                ctx.textBaseline="middle";
+                ctx.fillText(label, loc.x, loc.y+rad*0.15);
+            }
+
+            function updatelookAt(info, attr){
+
+                const p=lookAt;
+                let yRange=p.yRange;
+                let value=info.value;
+                if(p.yNegRange){
+                    yRange=info.value<0?p.yNegRange:p.yRange;
+                    value=Math.abs(value);
+                }
+                switch(attr){
+                    case "x":
+                        p.xOffset=info.value;
+                        p.x=lerp(p.xRange[0], p.xRange[1], info.value);
+                        break;
+                    case "y":
+                        p.yOffset=value;
+                        p.y=lerp(yRange[0], yRange[1], value);
+                        break;
+                }
+            }
+
+            function lerp(s, e, t){ 
+                return s+(e-s)*t;
+            }
+
+        </script>
+    </body>
+
+
+</html>
